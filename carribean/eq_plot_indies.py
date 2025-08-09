@@ -7,20 +7,34 @@ from obspy.clients.fdsn import Client
 import os
 import cartopy.crs as ccrs
 import sys
+import cartopy.feature as cfeature
+
 
 import circle as cir_robin
 from importlib import reload
 reload(cir_robin)
 import requests
 from obspy.taup.taup_geo import calc_dist,calc_dist_azi
+def get_plume_latlong(plume_file):
+    plume_data = np.genfromtxt(plume_file)
+    plume_lats = plume_data[:, 1]
+    plume_lons = plume_data[:, 2]
+    plume_lons = (plume_lons + 180) % 360 - 180
+
+    return plume_lons, plume_lats
 
 
 boundaries = requests.get("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").json()
+yes_plume = '/Users/keyser/Research/plumes_hotspots/jackson_etal_2021/yes_plume_vertical_lat_long.txt'
+plume_lons, plume_lats = get_plume_latlong(yes_plume)
 
 ####
 station='ILAR'
-sta_lat= 15
-sta_long=-78
+sta_lat= -2
+sta_long=-70
+
+eur_lat= 39
+eur_long= -3
 
 client = Client("IRIS")
 
@@ -49,7 +63,7 @@ endtime= UTCDateTime('2025-08-01T00:00:01')
 
 if not os.path.exists(catfile_NW):
     catalog = client.get_events(starttime=starttime, endtime=endtime,minmagnitude=6,\
-    latitude=sta_lat,longitude=sta_long, minradius=1, maxradius=20,mindepth=1)
+    latitude=sta_lat,longitude=sta_long, minradius=1, maxradius=30,mindepth=1)
     catalog.write(catfile_NW, 'QUAKEML')
 
 catalog_NW=read_events(catfile_NW)
@@ -72,45 +86,51 @@ print('{} event in catalog'.format(len(catalog_NW)))
 fig, ax=plt.subplots(figsize=(9,6))
 plt.axis('off')
 
-# ax = plt.axes(projection=ccrs.Mollweide(central_longitude=sta_long))
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
+ax = plt.axes(projection=ccrs.Mollweide(central_longitude=sta_long))
+# ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
 # ax = plt.axes(projection=ccrs.AzimuthalEquidistant(central_longitude=sta_long,central_latitude=sta_lat))
 ax.set_global()
-ax.stock_img()
+# ax.stock_img()
+ax.set_facecolor('none')
+ax.add_feature(cfeature.OCEAN.with_scale('110m'), facecolor='gainsboro', zorder=0)
+ax.add_feature(cfeature.LAND.with_scale('110m'), facecolor='lavenderblush', edgecolor='black', linewidth=0.2, zorder=1)
+
 ax.coastlines(color='black', linewidth=.55)
-ax.plot(sta_long, sta_lat, color='indigo', marker='^', markersize=7, transform=ccrs.Geodetic())
+# ax.plot(sta_long, sta_lat, color='indigo', marker='^', markersize=7, transform=ccrs.Geodetic())
 # ax.plot(sta_long_, sta_lat_, color='indigo', marker='^', markersize=7, transform=ccrs.Geodetic())
 
-min_marker_size = .3
+min_marker_size = .35
 for i in range(len(lats)): #plot eqs
     # x,y = eq_map(lon, lat)
     msize = mags[i] * min_marker_size
     # marker_string = get_marker_color(mag)
-    ax.plot(longs[i], lats[i],color='black',marker='o',markersize=msize,alpha=.4,transform=ccrs.Geodetic())
+    ax.plot(longs[i], lats[i],color='darkgreen',marker='o',markersize=msize,alpha=.4,transform=ccrs.Geodetic())
 
 
 X,Y=cir_robin.equi(sta_long, sta_lat, 3300)
 X1,Y1=cir_robin.equi(sta_long, sta_lat, 9900)
 
-plt.plot(X,Y,transform=ccrs.Geodetic(),lw=.7,alpha=.6,linestyle='--',c='maroon')
-plt.plot(X1,Y1,transform=ccrs.Geodetic(),lw=.7,alpha=.6,linestyle='--',c='maroon')
+plt.plot(X,Y,transform=ccrs.Geodetic(),lw=.9,alpha=.6,linestyle='--',c='maroon')
+plt.plot(X1,Y1,transform=ccrs.Geodetic(),lw=.9,alpha=.6,linestyle='--',c='maroon')
 
+ax.scatter(plume_lons, plume_lats, marker='D', color='black', s=25,
+           transform=ccrs.PlateCarree(), label='Plume detected')
 #plot gcp
-# for event in catalog_NW:
-#     ori= event.preferred_origin()
-#     plt.plot([sta_long, ori.longitude],[sta_lat, ori.latitude],  transform=ccrs.Geodetic(),color='black',lw=1.35,linestyle='dotted',alpha=.95)
+for event in catalog_NW:
+    ori= event.preferred_origin()
+    plt.plot([eur_long,ori.longitude ],[eur_lat, ori.latitude],  transform=ccrs.Geodetic(),color='darkgreen',lw=.1,alpha=.15)#,linestyle='dotted'
 
 # Plot boundaries.
-for f in boundaries["features"]:
-    c = np.array(f["geometry"]["coordinates"])
-    lng, lat = c[:, 0], c[:, 1]
-    x, y = lng, lat
-    mask = np.bitwise_or(np.abs(x) > 1e15, np.abs(y) > 1e15)
-    x = np.ma.array(x)
-    y = np.ma.array(y)
-    x.mask = mask
-    y.mask = mask
-    plt.plot(x, y, color="Navy", lw=.35,transform=ccrs.Geodetic())
+# for f in boundaries["features"]:
+#     c = np.array(f["geometry"]["coordinates"])
+#     lng, lat = c[:, 0], c[:, 1]
+#     x, y = lng, lat
+#     mask = np.bitwise_or(np.abs(x) > 1e15, np.abs(y) > 1e15)
+#     x = np.ma.array(x)
+#     y = np.ma.array(y)
+#     x.mask = mask
+#     y.mask = mask
+#     plt.plot(x, y, color="Navy", lw=.35,transform=ccrs.Geodetic())
 
 # ax.text(sta_long+5, sta_lat-3, 'AK',fontsize=8,fontfamily='serif', color='indigo',transform=ccrs.Geodetic())
 # ax.text(sta_long_+5, sta_lat_-3, 'AK_SE',fontsize=8,fontfamily='serif', color='indigo',transform=ccrs.Geodetic())
@@ -127,5 +147,5 @@ for pos in ['right', 'top', 'bottom', 'left']:
 # plt.show()
 
 # sys.exit()
-plt.savefig('eq_6_robin.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
+plt.savefig('eq_6_molly_eu.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
 ###
