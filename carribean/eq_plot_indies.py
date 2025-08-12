@@ -86,7 +86,7 @@ print('{} event in catalog'.format(len(catalog_NW)))
 fig, ax=plt.subplots(figsize=(9,6))
 plt.axis('off')
 
-ax = plt.axes(projection=ccrs.Mollweide(central_longitude=sta_long))
+ax = plt.axes(projection=ccrs.Mollweide(central_longitude=100))
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
 # ax = plt.axes(projection=ccrs.AzimuthalEquidistant(central_longitude=sta_long,central_latitude=sta_lat))
 ax.set_global()
@@ -147,5 +147,5 @@ for pos in ['right', 'top', 'bottom', 'left']:
 # plt.show()
 
 # sys.exit()
-plt.savefig('eq_6_molly_eu.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
+# plt.savefig('eq_6_molly_eu.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
 ###
