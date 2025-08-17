@@ -33,8 +33,8 @@ station='ILAR'
 sta_lat= -2
 sta_long=-70
 
-eur_lat= 39
-eur_long= -3
+eur_lat= 45
+eur_long= 10
 
 client = Client("IRIS")
 
@@ -86,14 +86,14 @@ print('{} event in catalog'.format(len(catalog_NW)))
 fig, ax=plt.subplots(figsize=(9,6))
 plt.axis('off')
 
-ax = plt.axes(projection=ccrs.Mollweide(central_longitude=100))
+ax = plt.axes(projection=ccrs.Mollweide(central_longitude=-20))
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
 # ax = plt.axes(projection=ccrs.AzimuthalEquidistant(central_longitude=sta_long,central_latitude=sta_lat))
 ax.set_global()
 # ax.stock_img()
 ax.set_facecolor('none')
-ax.add_feature(cfeature.OCEAN.with_scale('110m'), facecolor='gainsboro', zorder=0)
-ax.add_feature(cfeature.LAND.with_scale('110m'), facecolor='lavenderblush', edgecolor='black', linewidth=0.2, zorder=1)
+ax.add_feature(cfeature.OCEAN.with_scale('110m'), facecolor='xkcd:dusty blue', zorder=0,alpha=.4)
+ax.add_feature(cfeature.LAND.with_scale('110m'), facecolor='white', edgecolor='black', linewidth=0.2, zorder=1)
 
 ax.coastlines(color='black', linewidth=.55)
 # ax.plot(sta_long, sta_lat, color='indigo', marker='^', markersize=7, transform=ccrs.Geodetic())
@@ -144,7 +144,7 @@ for event in catalog_NW:
 for pos in ['right', 'top', 'bottom', 'left']:
     plt.gca().spines[pos].set_visible(False)
 
-# plt.show()
+plt.show()
 
 # sys.exit()
 # plt.savefig('eq_6_molly_eu.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
