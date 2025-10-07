@@ -1,3 +1,4 @@
+#awk '{seen[$3]} END {print length(seen)}' arrSta_eq2_1.5.txt
 import matplotlib.pyplot as plt
 import numpy as np
 import obspy

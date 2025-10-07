@@ -62,14 +62,14 @@ no_plume_lons, no_plume_lats = get_plume_latlong(no_plume)
 
 
 
-ax.scatter(plume_lons, plume_lats, marker='D', color='black', s=45,
-           transform=ccrs.PlateCarree(), label='Plume detected')
-ax.scatter(no_plume_lons, no_plume_lats, marker='D', color='whitesmoke', edgecolors='black', s=45,
-           transform=ccrs.PlateCarree(), label='No plume detected')
-
-ax.legend(loc='lower left')
+# ax.scatter(plume_lons, plume_lats, marker='D', color='black', s=45,
+#            transform=ccrs.PlateCarree(), label='Plume detected')
+# ax.scatter(no_plume_lons, no_plume_lats, marker='D', color='whitesmoke', edgecolors='black', s=45,
+#            transform=ccrs.PlateCarree(), label='No plume detected')
+#
+# ax.legend(loc='lower left')
 
 # plt.title('Tomography Map with Plume Locations')
 plt.tight_layout()
 # plt.show()
-plt.savefig('5vs_avg_2850_cont.png', dpi=350, bbox_inches='tight', pad_inches=0.1)
+plt.savefig('5vs_avg_2850_cont_.png', dpi=350, bbox_inches='tight', pad_inches=0.1)
