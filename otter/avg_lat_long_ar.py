@@ -75,8 +75,8 @@ ax.invert_yaxis()
 ax.vlines(-200, 1250, 2700, colors='navy', linewidth=2)
 ax.text(-200, (1250+2700)/2, 'P', ha='center', va='center',
         bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.5'))
-ax.vlines(-100, 700, 100, colors='navy', linewidth=2)
-ax.text(-100, (700+100)/2, 'PP', ha='center', va='center',
+ax.vlines(-100, 700, 1100, colors='navy', linewidth=2)
+ax.text(-100, (700+1100)/2, 'PP', ha='center', va='center',
         bbox=dict(facecolor='white', edgecolor='black', boxstyle='round,pad=0.5'))
 ax.vlines(100, 1200, 2600, colors='palevioletred', linewidth=2)
 ax.text(100, (1200+2600)/2, 'S', ha='center', va='center',
