@@ -102,5 +102,5 @@ ax.set_ylabel("Depth (km)")
 
 plt.tight_layout()
 # plt.show()
-fig.savefig(outpath, dpi=dpi,bbox_inches='tight', pad_inches=0.1)
+# fig.savefig(outpath, dpi=dpi,bbox_inches='tight', pad_inches=0.1)
 # plt.close(fig)
