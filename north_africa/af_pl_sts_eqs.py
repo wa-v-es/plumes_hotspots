@@ -2,6 +2,7 @@
 import matplotlib.pyplot as plt
 import numpy as np
 import obspy
+import csv
 from obspy import read, Stream, UTCDateTime,read_events
 from obspy.core.event import Origin
 from obspy.clients.fdsn import Client
@@ -36,6 +37,7 @@ sta_list=[]
 ta_list=[]
 eq_list=[]
 se_asia_eq_list=[]
+madagas_eq=[]
 
 # three af plumes_ lat long_ (jackson et al 2021, French & Roma: plume yes or no)
 haggar_ll=(23.2,	5.7)#(yes, no)
@@ -52,7 +54,8 @@ with open(st_all, "r") as infile:
             items = line.split()
             sta_list.append(Stations(float(items[3]),float(items[4])))
             if 25 < float(items[3]) < 50 and -125 < float(items[4])< -65:
-                ta_list.append(Stations(float(items[3]),float(items[4])))
+                if -95 < float(items[4]) < 110:
+                    ta_list.append(Stations(float(items[3]),float(items[4])))
 
 with open(eq_all, "r") as infile:
         headerline = infile.readline() # ignore this one
@@ -60,12 +63,24 @@ with open(eq_all, "r") as infile:
             items = line.split()
             year=UTCDateTime(items[1]).year
             eq_list.append(Eqs(float(items[5]),float(items[6]),float(items[3])))
-            if float(items[5]) < 10 and 2004 < year < 2015:
-                if 90 < float(items[6]) or -168 > float(items[6]):
-
+            # lat-5, lon-6..
+            if 50 < float(items[6]) < 110 and -25 < float(items[5]) < 15 and 2004 < year < 2025:
+            # if float(items[5]) < 10 :
+                # if 90 < float(items[6]) or -168 > float(items[6]):
+                # if 90 < float(items[6]) or -168 > float(items[6]):
                     se_asia_eq_list.append(Eqs(float(items[5]),float(items[6]),float(items[3])))
+#######
+fields = []  # Column names
+# rows = []    # Data rows
+with open('madgscr_eq.csv', 'r') as csvfile: #2010 to present. lats (-5.6,-40.2) longs(50,80)
+    csvreader = csv.reader(csvfile)
+    fields = next(csvreader)  # Read header
+    for row in csvreader:
+        # row=row.split()
+        madagas_eq.append(Eqs(float(row[4]),float(row[5]),float(row[7])))# lat long mag
 
-print('# eqs:',len(se_asia_eq_list))
+
+print('# eqs Madagascar:',len(madagas_eq))
 ######
 global_ = False
 TA_only = True
@@ -76,7 +91,7 @@ geod=pyproj.Geod(ellps="WGS84")
 fig, ax=plt.subplots(figsize=(15,10))
 plt.axis('off')
 plt.ion()
-ax = plt.axes(projection=ccrs.Robinson())# Stereographic was mollewide
+ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))# Stereographic was mollewide
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))#  was mollewide
 
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
@@ -89,13 +104,15 @@ ax.add_feature(cfeature.LAND.with_scale('110m'), facecolor='white', edgecolor='b
 
 ax.coastlines(color='black', linewidth=.55)
 
-X,Y=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 7700)
-X1,Y1=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 19800)
+X,Y=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 3300)
+X1,Y1=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 10450)
 
 plt.plot(X,Y,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
 plt.plot(X1,Y1,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
-ax.text(20, -55, '70°',fontsize=14,fontfamily='serif', color='royalblue',transform=ccrs.Geodetic())
-ax.text(140, 25, 'Eqs ({}) 2004-15'.format(len(se_asia_eq_list)),fontsize=11,fontfamily='serif', color='black',transform=ccrs.Geodetic())
+ax.text(14, -7, '30°',fontsize=14,fontfamily='serif', color='royalblue',transform=ccrs.Geodetic())
+ax.text(14, -81, '95°',fontsize=14,fontfamily='serif', color='royalblue',transform=ccrs.Geodetic())
+
+# ax.text(140, 25, 'Eqs ({}) 2004-15'.format(len(se_asia_eq_list)),fontsize=11,fontfamily='serif', color='black',transform=ccrs.Geodetic())
 
 if global_:
     for sta in sta_list:
@@ -106,22 +123,23 @@ if global_:
 if TA_only:
     for sta in ta_list:
         ax.scatter(sta.lon,sta.lat,marker='v', s=12, transform=ccrs.Geodetic(),c='none',edgecolors='teal',alpha=.4,lw=.3)
-    for eq in se_asia_eq_list:
+    for eq in madagas_eq:
         ax.scatter(eq.lon,eq.lat,marker='o', s=7, transform=ccrs.Geodetic(),c='brown',edgecolors='white',alpha=.75,lw=.15)
 
 for pos in ['right', 'top', 'bottom', 'left']:
     plt.gca().spines[pos].set_visible(False)
 
 # US edges LAT 25, 50..LONG -65, -125
-
-
-for eq in se_asia_eq_list:
+#### another way to draw gcp_bazi
     # line_arc=geod.inv_intermediate(eq.lon,eq.lat,-65,25,npts=300)
     # lon_points=np.array(line_arc.lons)
     # lat_points=np.array(line_arc.lats)
     # plt.plot(lon_points, lat_points, transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)
-    plt.plot([-65,eq.lon],[25, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.09,alpha=.15)#,linestyle='dotted'
-    # plt.plot([-125,eq.lon],[25, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
+# SC -80,35N
+for eq in madagas_eq:
+    # plt.plot([tibesti_ll[1],eq.lon],[tibesti_ll[0], eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.2,alpha=.2)#,linestyle='dotted'
+    # dist,az,baz=calc_dist_azi(eq.lat,eq.lon,tibesti_ll[0],tibesti_ll[1],6400,0)# lat, long (source,receiver)
+    plt.plot([-80,eq.lon],[35, eq.lat],  transform=ccrs.Geodetic(),color='darkred',lw=.2,alpha=.2)#,linestyle='dotted'
     # plt.plot([-65,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
     # plt.plot([-125,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
 
