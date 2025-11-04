@@ -10,6 +10,9 @@ import cartopy.crs as ccrs
 import sys
 import cartopy.feature as cfeature
 import requests
+from obspy.taup.taup_geo import calc_dist,calc_dist_azi
+from obspy.taup import TauPyModel
+import pyproj
 
 from obspy.taup.taup_geo import calc_dist,calc_dist_azi
 sys.path.append("/Users/keyser/Research/plumes_hotspots/carribean")
@@ -68,11 +71,14 @@ global_ = False
 TA_only = True
 boundaries = requests.get("https://raw.githubusercontent.com/fraxen/tectonicplates/master/GeoJSON/PB2002_boundaries.json").json()
 # yes_plume = '/Users/keyser/Research/plumes_hotspots/jackson_etal_2021/yes_plume_vertical_lat_long.txt'
+geod=pyproj.Geod(ellps="WGS84")
 
 fig, ax=plt.subplots(figsize=(15,10))
 plt.axis('off')
 plt.ion()
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))# was mollewide
+ax = plt.axes(projection=ccrs.Robinson())# Stereographic was mollewide
+# ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))#  was mollewide
+
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
 # ax = plt.axes(projection=ccrs.AzimuthalEquidistant(central_longitude=sta_long,central_latitude=sta_lat))
 ax.set_global()
@@ -83,12 +89,19 @@ ax.add_feature(cfeature.LAND.with_scale('110m'), facecolor='white', edgecolor='b
 
 ax.coastlines(color='black', linewidth=.55)
 
+X,Y=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 7700)
+X1,Y1=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 19800)
+
+plt.plot(X,Y,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
+plt.plot(X1,Y1,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
+ax.text(20, -55, '70°',fontsize=14,fontfamily='serif', color='royalblue',transform=ccrs.Geodetic())
+ax.text(140, 25, 'Eqs ({}) 2004-15'.format(len(se_asia_eq_list)),fontsize=11,fontfamily='serif', color='black',transform=ccrs.Geodetic())
+
 if global_:
     for sta in sta_list:
         ax.scatter(sta.lon,sta.lat,marker='v', s=12, transform=ccrs.Geodetic(),c='none',edgecolors='teal',alpha=.4,lw=.3)
     for eq in eq_list:
         ax.scatter(eq.lon,eq.lat,marker='o', s=7, transform=ccrs.Geodetic(),c='brown',edgecolors='white',alpha=.75,lw=.15)
-
 
 if TA_only:
     for sta in ta_list:
@@ -99,6 +112,20 @@ if TA_only:
 for pos in ['right', 'top', 'bottom', 'left']:
     plt.gca().spines[pos].set_visible(False)
 
+# US edges LAT 25, 50..LONG -65, -125
+
+
+for eq in se_asia_eq_list:
+    # line_arc=geod.inv_intermediate(eq.lon,eq.lat,-65,25,npts=300)
+    # lon_points=np.array(line_arc.lons)
+    # lat_points=np.array(line_arc.lats)
+    # plt.plot(lon_points, lat_points, transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)
+    plt.plot([-65,eq.lon],[25, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.09,alpha=.15)#,linestyle='dotted'
+    # plt.plot([-125,eq.lon],[25, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
+    # plt.plot([-65,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
+    # plt.plot([-125,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
+
+
 ax.scatter(haggar_ll[1], haggar_ll[0], marker='D', color='gold', s=55,
            transform=ccrs.PlateCarree())
 ax.scatter(darfur_ll[1], darfur_ll[0], marker='D', color='gold', s=55,
@@ -107,13 +134,7 @@ ax.scatter(tibesti_ll[1], tibesti_ll[0], marker='D', color='gold', s=55,
            transform=ccrs.PlateCarree())
 # ax.set_frame_on(False)
 
-X,Y=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 7700)
-X1,Y1=cir_robin.equi(tibesti_ll[1], tibesti_ll[0], 19800)
 
-plt.plot(X,Y,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
-plt.plot(X1,Y1,transform=ccrs.Geodetic(),lw=2,alpha=1,linestyle='--',c='royalblue')
-ax.text(20, -55, '70°',fontsize=14,fontfamily='serif', color='royalblue',transform=ccrs.Geodetic())
-ax.text(140, 25, 'Eqs ({}) 2004-15'.format(len(se_asia_eq_list)),fontsize=11,fontfamily='serif', color='black',transform=ccrs.Geodetic())
 
 plt.show()
 
