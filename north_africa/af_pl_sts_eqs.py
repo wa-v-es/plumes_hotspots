@@ -18,6 +18,13 @@ import pyproj
 from obspy.taup.taup_geo import calc_dist,calc_dist_azi
 sys.path.append("/Users/keyser/Research/plumes_hotspots/carribean")
 
+def findMiddle(input_list):
+    middle = float(len(input_list))/2
+    if middle % 2 != 0:
+        return input_list[int(middle - .5)]
+    else:
+        return (input_list[int(middle)], input_list[int(middle-1)])
+
 import circle as cir_robin
 
 
@@ -88,15 +95,17 @@ boundaries = requests.get("https://raw.githubusercontent.com/fraxen/tectonicplat
 # yes_plume = '/Users/keyser/Research/plumes_hotspots/jackson_etal_2021/yes_plume_vertical_lat_long.txt'
 geod=pyproj.Geod(ellps="WGS84")
 
-fig, ax=plt.subplots(figsize=(15,10))
+# fig, ax=plt.subplots(figsize=(15,10))
+fig, ax=plt.subplots(figsize=(10,10))
+
 plt.axis('off')
 plt.ion()
-ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))# Stereographic was mollewide
+ax = plt.axes(projection=ccrs.Stereographic())# Stereographic was mollewide
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=20))#  was mollewide
-
+ax.set_extent([-90, 80, -60, 60], ccrs.Geodetic())
 # ax = plt.axes(projection=ccrs.Robinson(central_longitude=sta_long))
 # ax = plt.axes(projection=ccrs.AzimuthalEquidistant(central_longitude=sta_long,central_latitude=sta_lat))
-ax.set_global()
+# ax.set_global()
 # ax.stock_img()
 ax.set_facecolor('none')
 ax.add_feature(cfeature.OCEAN.with_scale('110m'), facecolor='gainsboro', zorder=0)
@@ -139,21 +148,27 @@ for pos in ['right', 'top', 'bottom', 'left']:
 for eq in madagas_eq:
     # plt.plot([tibesti_ll[1],eq.lon],[tibesti_ll[0], eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.2,alpha=.2)#,linestyle='dotted'
     # dist,az,baz=calc_dist_azi(eq.lat,eq.lon,tibesti_ll[0],tibesti_ll[1],6400,0)# lat, long (source,receiver)
-    plt.plot([-80,eq.lon],[35, eq.lat],  transform=ccrs.Geodetic(),color='darkred',lw=.2,alpha=.2)#,linestyle='dotted'
+    # plt.plot([-80,eq.lon],[35, eq.lat],  transform=ccrs.Geodetic(),color='darkred',lw=.2,alpha=.2)#,linestyle='dotted'
+    line_arc=geod.inv_intermediate(eq.lon,eq.lat,-80,35,npts=300)
+    lon_points=np.array(line_arc.lons)
+    lat_points=np.array(line_arc.lats)
+    plt.plot(lon_points, lat_points, transform=ccrs.Geodetic(),color='darkred',lw=.2,alpha=.2)
+    ax.scatter(lon_points[150], lat_points[150], marker='o', color='darkgreen', s=15,
+               transform=ccrs.Geodetic(),alpha=.2)
     # plt.plot([-65,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
     # plt.plot([-125,eq.lon],[50, eq.lat],  transform=ccrs.Geodetic(),color='darkgreen',lw=.05,alpha=.1)#,linestyle='dotted'
 
 
 ax.scatter(haggar_ll[1], haggar_ll[0], marker='D', color='gold', s=55,
-           transform=ccrs.PlateCarree())
+           transform=ccrs.Geodetic())
 ax.scatter(darfur_ll[1], darfur_ll[0], marker='D', color='gold', s=55,
-           transform=ccrs.PlateCarree())
+           transform=ccrs.Geodetic())
 ax.scatter(tibesti_ll[1], tibesti_ll[0], marker='D', color='gold', s=55,
-           transform=ccrs.PlateCarree())
+           transform=ccrs.Geodetic())
 # ax.set_frame_on(False)
 
 
 
 plt.show()
 
-# plt.savefig('af_st_eq_all.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
+# plt.savefig('af_madagas_us.jpg',dpi=400,bbox_inches='tight', pad_inches=0,transparent=True)
